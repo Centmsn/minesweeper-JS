@@ -62,24 +62,39 @@ const checkTile = (e) => {
   e.target.removeEventListener("click", checkTile);
   e.target.classList.remove("game__tile--active");
   e.target.classList.add("game__tile--inactive");
+
+  checkIfWin();
+};
+
+const checkIfWin = () => {
+  const activeTiles = document.querySelectorAll(".game__tile--active");
+  const mines = document.querySelectorAll(".game__tile--danger");
+
+  if (activeTiles.length === mines.length) {
+    console.log("win");
+  }
 };
 
 const setFlag = (e) => {
   e.preventDefault();
 
-  if (e.target.classList.contains("game__tile--inactive")) return;
+  if (updateCounter(false)) {
+    if (e.target.classList.contains("game__tile--inactive")) return;
 
-  e.target.classList.add("game__tile--marked");
-  e.target.removeEventListener("click", checkTile);
-  e.target.addEventListener("contextmenu", removeFlag);
+    e.target.classList.add("game__tile--marked");
+    e.target.removeEventListener("click", checkTile);
+    e.target.addEventListener("contextmenu", removeFlag);
+  }
 };
 
 const removeFlag = (e) => {
   e.preventDefault();
 
-  e.target.classList.remove("game__tile--marked");
-  e.target.removeEventListener("contextmenu", removeFlag);
-  e.target.addEventListener("click", checkTile);
+  if (updateCounter(true)) {
+    e.target.classList.remove("game__tile--marked");
+    e.target.removeEventListener("contextmenu", removeFlag);
+    e.target.addEventListener("click", checkTile);
+  }
 };
 
 const detectMines = (target) => {
@@ -208,6 +223,21 @@ const createTiles = (amount) => {
   }
 
   board.style.gridTemplateColumns = gridTemplate;
+};
+
+const updateCounter = (add) => {
+  const counter = document.querySelector(".game__counter");
+  const flags = document.querySelectorAll(".game__tile--marked");
+  const flagsLeft = mines - flags.length;
+
+  if (!add && flagsLeft - 1 >= 0) {
+    counter.textContent = flagsLeft - 1;
+    return true;
+  } else if (add) {
+    counter.textContent = flagsLeft + 1;
+    return true;
+  }
+  return false;
 };
 
 const setCounter = (amount) => {
