@@ -1,10 +1,42 @@
 const board = document.querySelector(".game__board");
 const startBtn = document.querySelector(".game__btn");
+
 let firstClick = true;
 let mines = null;
+let size = null;
 let clockId;
+let leftWall = [];
+let rightWall = [];
+
+const detectBorder = () => {
+  const tiles = document.querySelectorAll(".game__tile");
+  switch (mines) {
+    case 10:
+      size = 8;
+      break;
+
+    case 40:
+      size = 16;
+      break;
+
+    case 99:
+      size = 30;
+      break;
+  }
+
+  for (let i = 0; i < tiles.length; i += size) {
+    leftWall.push(tiles[i]);
+  }
+
+  for (let i = size - 1; i < tiles.length; i += size) {
+    rightWall.push(tiles[i]);
+  }
+};
 
 const endGame = (e, mines) => {
+  if (e.target.classList.contains("game__tile--marked")) {
+    return;
+  }
   mines.forEach((mine) => mine.classList.add("game__tile--bomb"));
   e.target.classList.remove("game__tile--bomb");
   e.target.classList.add("game__tile--explosion");
@@ -27,42 +59,7 @@ const checkTile = (e) => {
     generateMines(e.target);
   }
 
-  const minesAround = detectMines(parseInt(e.target.dataset.key));
-  let color;
-
-  if (minesAround === 0) {
-  }
-
-  switch (minesAround) {
-    case 1:
-      color = "blue";
-      break;
-
-    case 2:
-      color = "green";
-      break;
-
-    case 3:
-    case 4:
-    case 5:
-    case 6:
-      color = "red";
-      break;
-
-    case 7:
-    case 8:
-      color = "brown";
-  }
-
-  const span = document.createElement("span");
-  span.textContent = minesAround;
-  span.style.color = color;
-
-  e.target.appendChild(span);
-  e.target.removeEventListener("click", checkTile);
-  e.target.classList.remove("game__tile--active");
-  e.target.classList.add("game__tile--inactive");
-
+  detectMines(parseInt(e.target.dataset.key));
   checkIfWin();
 };
 
@@ -98,32 +95,10 @@ const removeFlag = (e) => {
 };
 
 const detectMines = (target) => {
-  let size, filteredMines;
   const tiles = document.querySelectorAll(".game__tile");
-  const leftWall = [];
-  const rightWall = [];
+  let filteredMines;
 
-  switch (mines) {
-    case 10:
-      size = 8;
-      break;
-
-    case 40:
-      size = 16;
-      break;
-
-    case 99:
-      size = 30;
-      break;
-  }
-
-  for (let i = 0; i < tiles.length; i += size) {
-    leftWall.push(tiles[i]);
-  }
-
-  for (let i = size - 1; i < tiles.length; i += size) {
-    rightWall.push(tiles[i]);
-  }
+  // console.log(target);
 
   const minesAround = [
     tiles[target + 1],
@@ -144,9 +119,68 @@ const detectMines = (target) => {
     filteredMines = minesAround;
   }
 
-  return filteredMines
-    .filter((el) => el !== undefined)
-    .filter((el) => el.classList.contains("game__tile--danger")).length;
+  filteredMines = filteredMines.filter((el) => el !== undefined);
+
+  const amountOfBombs = filteredMines.filter((el) =>
+    el.classList.contains("game__tile--danger")
+  );
+
+  // return filteredMines.length;
+  markTile(amountOfBombs.length, tiles[target], filteredMines);
+};
+
+const markTile = (num, target, mines) => {
+  console.log(num);
+  let color;
+
+  if (num === 0) {
+    revealBlanks(mines);
+  } else {
+    switch (num) {
+      case 1:
+        color = "blue";
+        break;
+
+      case 2:
+        color = "green";
+        break;
+
+      case 3:
+      case 4:
+      case 5:
+      case 6:
+        color = "red";
+        break;
+
+      case 7:
+      case 8:
+        color = "brown";
+    }
+
+    if (target.children.length > 0) {
+      return;
+    }
+    const span = document.createElement("span");
+    span.textContent = num;
+    span.style.color = color;
+    target.appendChild(span);
+  }
+
+  target.removeEventListener("click", checkTile);
+  target.classList.remove("game__tile--active");
+  target.classList.add("game__tile--inactive");
+};
+
+const revealBlanks = (tilesAround) => {
+  const noInactive = tilesAround.filter(
+    (el) => !el.classList.contains("game__tile--inactive")
+  );
+
+  for (let i = 0; i < noInactive.length; i++) {
+    setTimeout(() => {
+      detectMines(parseInt(noInactive[i].dataset.key));
+    }, 10);
+  }
 };
 
 const generateMines = (target) => {
@@ -280,6 +314,7 @@ const newGame = () => {
 
   createTiles(size);
   setCounter(size);
+  detectBorder();
 
   if (clockId) {
     clearInterval(clockId);
