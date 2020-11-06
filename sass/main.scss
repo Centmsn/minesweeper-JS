@@ -160,7 +160,7 @@ a {
     flex-basis: 15%;
     text-align: center;
     padding: 5px;
-    color: white;
+    color: rgb(53, 93, 202);
   }
 
   &__btn {
@@ -190,22 +190,24 @@ a {
     justify-content: space-between;
   }
 
-  &__input {
-    width: 50%;
-  }
-
   &__opt {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-    height: 50px;
+    height: 10%;
+    min-height: 50px;
 
     display: flex;
-    justify-content: space-between;
+    justify-content: space-around;
     align-items: center;
 
     @include inner-border($light-gray);
+  }
+
+  &__save {
+    flex-basis: 30%;
+    height: 60%;
   }
 
   &__opt--hidden {
