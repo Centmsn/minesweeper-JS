@@ -10,17 +10,27 @@
   <body>
     <div class="game">
       <div class="game__stats">
-        <div class="game__counter"><span>003</span></div>
+        <div class="game__counter"></div>
         <div class="game__start">
-          <button class="game__btn">new game</button
-          ><select name="size" class="game__size">
-            <option value="64">8x8</option>
-            <option value="256">16x16</option>
-            <option value="480">30x16</option>
-          </select>
+          <button class="button game__btn">new game</button>
+          <button class="button game__options">Options</button>
         </div>
-        <div class="game__clock"><span>215</span></div>
+        <div class="game__clock"></div>
       </div>
+
+      <div class="game__opt game__opt--hidden">
+        <label class="game__label"
+          >size
+          <select name="size" class="game__size">
+            <option value="64">small</option>
+            <option value="256">medium</option>
+            <option value="480">large</option>
+          </select>
+        </label>
+
+        <button class="button game__save">save</button>
+      </div>
+
       <div class="game__board"></div>
     </div>
 

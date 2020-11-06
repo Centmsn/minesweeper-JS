@@ -1,6 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Anton&display=swap");
 
-$light-gray: rgb(199, 199, 199);
+$light-gray: rgb(197, 197, 197);
 $dark-gray: rgb(100, 100, 100);
 $white: rgb(244, 244, 248);
 
@@ -27,14 +27,52 @@ body {
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
+
+  background-color: whitesmoke;
+}
+
+a {
+  color: $dark-gray;
+  text-decoration: none;
 }
 
 .footer {
   flex-basis: 100%;
   align-self: flex-end;
+
+  font-size: 0.7rem;
+  color: $dark-gray;
+}
+
+.modal {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  background-color: rgba(104, 104, 104, 0.541);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  text-align: center;
+  font-size: 2rem;
+}
+
+.button {
+  width: 45%;
+  height: 50%;
+  background: none;
+  outline: none;
+  cursor: pointer;
+  padding: 2px;
+
+  &:hover {
+    color: white;
+  }
 }
 
 .game {
+  position: relative;
   background-color: $light-gray;
 
   border-bottom: 3px solid $dark-gray;
@@ -43,6 +81,7 @@ body {
   border-top: 3px solid lighten($light-gray, 10%);
 
   &__board {
+    position: relative;
     height: 80%;
     display: grid;
     @include inner-border($light-gray);
@@ -56,6 +95,8 @@ body {
     justify-content: center;
     align-items: center;
     flex-wrap: wrap;
+
+    user-select: none;
   }
 
   &__tile--active {
@@ -109,15 +150,66 @@ body {
     @include inner-border($light-gray);
   }
 
+  &__stats--hidden {
+    visibility: hidden;
+    opacity: 0;
+  }
+
   &__counter,
   &__clock {
-    flex-basis: 10%;
+    flex-basis: 15%;
+    text-align: center;
+    padding: 5px;
+    color: white;
+  }
+
+  &__btn {
+    width: 50%;
+    height: 50%;
+    background: none;
+    outline: none;
+    cursor: pointer;
+
+    &:hover {
+      color: white;
+    }
+  }
+
+  &__size {
+    background: none;
+  }
+
+  &__label {
+    flex-basis: 45%;
   }
 
   &__start {
-    flex-basis: 70%;
+    flex-basis: 65%;
 
     display: flex;
     justify-content: space-between;
+  }
+
+  &__input {
+    width: 50%;
+  }
+
+  &__opt {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 50px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    @include inner-border($light-gray);
+  }
+
+  &__opt--hidden {
+    opacity: 0;
+    visibility: hidden;
   }
 }

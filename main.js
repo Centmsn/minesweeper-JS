@@ -1,5 +1,6 @@
 const board = document.querySelector(".game__board");
 const startBtn = document.querySelector(".game__btn");
+const minesInput = document.querySelector(".game__input");
 
 let firstClick = true;
 let mines = null;
@@ -8,18 +9,17 @@ let clockId;
 let leftWall = [];
 let rightWall = [];
 
-const detectBorder = () => {
-  const tiles = document.querySelectorAll(".game__tile");
-  switch (mines) {
-    case 10:
+const detectBorder = (tiles) => {
+  switch (tiles.length) {
+    case 64:
       size = 8;
       break;
 
-    case 40:
+    case 256:
       size = 16;
       break;
 
-    case 99:
+    case 480:
       size = 30;
       break;
   }
@@ -44,10 +44,11 @@ const endGame = (e, mines) => {
   const tiles = document.querySelectorAll(".game__tile");
   tiles.forEach((tile) => {
     tile.removeEventListener("click", checkTile);
-    tile.removeEventListener("contextmenu", setFlag);
-    tile.removeEventListener("contextmenu", removeFlag);
-    // TODO: remove endGame listener
+    tile.removeEventListener("contextmenu", toggleFlag);
+    tile.removeEventListener("contextmenu", toggleFlag);
   });
+
+  clearInterval(clockId);
 };
 
 const checkTile = (e) => {
@@ -55,9 +56,10 @@ const checkTile = (e) => {
 
   if (firstClick) {
     firstClick = false;
-
     generateMines(e.target);
   }
+
+  if (e.target.classList.contains("game__tile--marked")) return;
 
   detectMines(parseInt(e.target.dataset.key));
   checkIfWin();
@@ -68,37 +70,37 @@ const checkIfWin = () => {
   const mines = document.querySelectorAll(".game__tile--danger");
 
   if (activeTiles.length === mines.length) {
-    console.log("win");
+    clearInterval(clockId);
+    const modal = document.createElement("div");
+    modal.classList.add("modal");
+    modal.innerHTML = `You won! <br> Time: ${
+      document.querySelector(".game__clock").textContent
+    }s`;
+
+    board.appendChild(modal);
   }
 };
 
-const setFlag = (e) => {
+const toggleFlag = (e) => {
   e.preventDefault();
+  const marked = "game__tile--marked";
+  const flags = document.querySelectorAll(".game__tile--marked");
+  const flagsLeft = mines - (flags ? flags.length : 0);
 
-  if (updateCounter(false)) {
-    if (e.target.classList.contains("game__tile--inactive")) return;
+  if (e.target.classList.contains("game__tile--inactive")) return;
 
-    e.target.classList.add("game__tile--marked");
-    e.target.removeEventListener("click", checkTile);
-    e.target.addEventListener("contextmenu", removeFlag);
-  }
-};
-
-const removeFlag = (e) => {
-  e.preventDefault();
-
-  if (updateCounter(true)) {
-    e.target.classList.remove("game__tile--marked");
-    e.target.removeEventListener("contextmenu", removeFlag);
-    e.target.addEventListener("click", checkTile);
+  if (e.target.classList.contains(marked)) {
+    e.target.classList.toggle(marked);
+    updateCounter(flagsLeft + 1);
+  } else if (!e.target.classList.contains(marked) && flagsLeft - 1 > 0) {
+    e.target.classList.toggle(marked);
+    updateCounter(flagsLeft - 1);
   }
 };
 
 const detectMines = (target) => {
   const tiles = document.querySelectorAll(".game__tile");
   let filteredMines;
-
-  // console.log(target);
 
   const minesAround = [
     tiles[target + 1],
@@ -125,12 +127,10 @@ const detectMines = (target) => {
     el.classList.contains("game__tile--danger")
   );
 
-  // return filteredMines.length;
   markTile(amountOfBombs.length, tiles[target], filteredMines);
 };
 
 const markTile = (num, target, mines) => {
-  console.log(num);
   let color;
 
   if (num === 0) {
@@ -187,32 +187,31 @@ const generateMines = (target) => {
   const tiles = document.querySelectorAll(".game__tile");
   const placedMines = [];
   let remainedMines = mines;
-  let range, randomNum;
+  let randomNum;
 
-  switch (mines) {
-    case 10:
-      range = 64;
-      break;
+  const id = parseInt(target.dataset.key);
 
-    case 40:
-      range = 256;
-      break;
-
-    case 99:
-      range = 480;
-      break;
-
-    default:
-      break;
-  }
+  // !Repeated code
+  // !DRY
+  const minesAround = [
+    tiles[id + 1],
+    tiles[id + size + 1],
+    tiles[id - size + 1],
+    tiles[id - size],
+    tiles[id + size],
+    tiles[id + size - 1],
+    tiles[id - 1],
+    tiles[id - size - 1],
+  ];
 
   while (remainedMines > 0) {
-    randomNum = getRandomNumber(range);
+    randomNum = getRandomNumber(tiles.length);
     while (
       placedMines.includes(tiles[randomNum]) ||
-      randomNum == target.dataset.key
+      randomNum == target.dataset.key ||
+      minesAround.includes(tiles[randomNum])
     ) {
-      randomNum = getRandomNumber(range);
+      randomNum = getRandomNumber(tiles.length);
     }
 
     placedMines.push(tiles[randomNum]);
@@ -235,7 +234,7 @@ const createTiles = (amount) => {
     const tile = document.createElement("div");
     tile.classList.add("game__tile", "game__tile--active");
     tile.dataset.key = i;
-    tile.addEventListener("contextmenu", setFlag);
+    tile.addEventListener("contextmenu", toggleFlag);
     tile.addEventListener("click", checkTile);
 
     fragmet.appendChild(tile);
@@ -259,19 +258,9 @@ const createTiles = (amount) => {
   board.style.gridTemplateColumns = gridTemplate;
 };
 
-const updateCounter = (add) => {
+const updateCounter = (num) => {
   const counter = document.querySelector(".game__counter");
-  const flags = document.querySelectorAll(".game__tile--marked");
-  const flagsLeft = mines - flags.length;
-
-  if (!add && flagsLeft - 1 >= 0) {
-    counter.textContent = flagsLeft - 1;
-    return true;
-  } else if (add) {
-    counter.textContent = flagsLeft + 1;
-    return true;
-  }
-  return false;
+  counter.textContent = num;
 };
 
 const setCounter = (amount) => {
@@ -301,23 +290,42 @@ const getRandomNumber = (range) => {
   return Math.floor(Math.random() * range);
 };
 
+const toggleOptionsVisibility = () => {
+  const options = document.querySelector(".game__opt");
+  const stats = document.querySelector(".game__stats");
+
+  options.classList.toggle("game__opt--hidden");
+  stats.classList.toggle("game__stats--hidden");
+};
+
 const newGame = () => {
   const clock = document.querySelector(".game__clock");
   const size = parseInt(document.querySelector(".game__size").value);
+
+  const modal = document.querySelector(".modal");
   let time = 0;
+
+  leftWall = [];
+  rightWall = [];
 
   //   flag for first tile click in each game
   firstClick = true;
 
   board.innerHTML = "";
   clock.innerHTML = "";
+  clock.textContent = "000";
 
   createTiles(size);
+  const tiles = document.querySelectorAll(".game__tile");
   setCounter(size);
-  detectBorder();
+  detectBorder(tiles);
 
   if (clockId) {
     clearInterval(clockId);
+  }
+
+  if (modal) {
+    board.removeChild(modal);
   }
 
   clockId = setInterval(() => {
@@ -336,3 +344,6 @@ const newGame = () => {
 
 newGame();
 startBtn.addEventListener("click", newGame);
+document
+  .querySelectorAll(".game__options, .game__save")
+  .forEach((btn) => btn.addEventListener("click", toggleOptionsVisibility));
