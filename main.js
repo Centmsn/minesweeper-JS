@@ -92,7 +92,7 @@ const toggleFlag = (e) => {
   if (e.target.classList.contains(marked)) {
     e.target.classList.toggle(marked);
     updateCounter(flagsLeft + 1);
-  } else if (!e.target.classList.contains(marked) && flagsLeft - 1 > 0) {
+  } else if (!e.target.classList.contains(marked) && flagsLeft - 1 >= 0) {
     e.target.classList.toggle(marked);
     updateCounter(flagsLeft - 1);
   }
@@ -172,9 +172,9 @@ const markTile = (num, target, mines) => {
 };
 
 const revealBlanks = (tilesAround) => {
-  const noInactive = tilesAround.filter(
-    (el) => !el.classList.contains("game__tile--inactive")
-  );
+  const noInactive = tilesAround
+    .filter((el) => !el.classList.contains("game__tile--inactive"))
+    .filter((el) => !el.classList.contains("game__tile--marked"));
 
   for (let i = 0; i < noInactive.length; i++) {
     setTimeout(() => {
@@ -322,10 +322,6 @@ const newGame = () => {
 
   if (clockId) {
     clearInterval(clockId);
-  }
-
-  if (modal) {
-    board.removeChild(modal);
   }
 
   clockId = setInterval(() => {
