@@ -1,6 +1,5 @@
 const board = document.querySelector(".game__board");
 const startBtn = document.querySelector(".game__btn");
-const minesInput = document.querySelector(".game__input");
 
 let firstClick = true;
 let mines = null;
@@ -9,20 +8,8 @@ let clockId;
 let leftWall = [];
 let rightWall = [];
 
-const detectBorder = (tiles) => {
-  switch (tiles.length) {
-    case 64:
-      size = 8;
-      break;
-
-    case 256:
-      size = 16;
-      break;
-
-    case 480:
-      size = 30;
-      break;
-  }
+const detectBorder = (tiles, columns) => {
+  size = columns;
 
   for (let i = 0; i < tiles.length; i += size) {
     leftWall.push(tiles[i]);
@@ -44,7 +31,6 @@ const endGame = (e, mines) => {
   const tiles = document.querySelectorAll(".game__tile");
   tiles.forEach((tile) => {
     tile.removeEventListener("click", checkTile);
-    tile.removeEventListener("contextmenu", toggleFlag);
     tile.removeEventListener("contextmenu", toggleFlag);
   });
 
@@ -73,7 +59,7 @@ const checkIfWin = () => {
     clearInterval(clockId);
     const modal = document.createElement("div");
     modal.classList.add("modal");
-    modal.innerHTML = `You won! <br> Time: ${
+    modal.innerHTML = `Victory! <br> Time: ${
       document.querySelector(".game__clock").textContent
     }s`;
 
@@ -84,7 +70,7 @@ const checkIfWin = () => {
 const toggleFlag = (e) => {
   e.preventDefault();
   const marked = "game__tile--marked";
-  const flags = document.querySelectorAll(".game__tile--marked");
+  const flags = document.querySelectorAll(`.${marked}`);
   const flagsLeft = mines - (flags ? flags.length : 0);
 
   if (e.target.classList.contains("game__tile--inactive")) return;
@@ -128,6 +114,7 @@ const detectMines = (target) => {
   );
 
   markTile(amountOfBombs.length, tiles[target], filteredMines);
+  checkIfWin();
 };
 
 const markTile = (num, target, mines) => {
@@ -136,6 +123,10 @@ const markTile = (num, target, mines) => {
   if (num === 0) {
     revealBlanks(mines);
   } else {
+    if (target.children.length > 0) {
+      return;
+    }
+
     switch (num) {
       case 1:
         color = "blue";
@@ -157,9 +148,6 @@ const markTile = (num, target, mines) => {
         color = "brown";
     }
 
-    if (target.children.length > 0) {
-      return;
-    }
     const span = document.createElement("span");
     span.textContent = num;
     span.style.color = color;
@@ -226,9 +214,9 @@ const generateMines = (target) => {
   });
 };
 
-const createTiles = (amount) => {
+const createTiles = (amount, columns) => {
   const fragmet = document.createDocumentFragment();
-  let gridTemplate = "";
+  const gridTemplate = `repeat(${columns}, 1fr)`;
 
   for (let i = 0; i < amount; i++) {
     const tile = document.createElement("div");
@@ -241,20 +229,6 @@ const createTiles = (amount) => {
   }
 
   board.appendChild(fragmet);
-
-  switch (amount) {
-    case 64:
-      gridTemplate = "repeat(8, 1fr)";
-      break;
-
-    case 256:
-      gridTemplate = "repeat(16, 1fr)";
-      break;
-
-    default:
-      gridTemplate = "repeat(30, 1fr)";
-  }
-
   board.style.gridTemplateColumns = gridTemplate;
 };
 
@@ -301,8 +275,8 @@ const toggleOptionsVisibility = () => {
 const newGame = () => {
   const clock = document.querySelector(".game__clock");
   const size = parseInt(document.querySelector(".game__size").value);
+  const columns = size === 480 ? 30 : Math.sqrt(size);
 
-  const modal = document.querySelector(".modal");
   let time = 0;
 
   leftWall = [];
@@ -315,10 +289,10 @@ const newGame = () => {
   clock.innerHTML = "";
   clock.textContent = "000";
 
-  createTiles(size);
+  createTiles(size, columns);
   const tiles = document.querySelectorAll(".game__tile");
   setCounter(size);
-  detectBorder(tiles);
+  detectBorder(tiles, columns);
 
   if (clockId) {
     clearInterval(clockId);
